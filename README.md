@@ -5,6 +5,8 @@ Django app that allows you to maintain an entire object history and audit log of
 
 In contrast to other audit apps, this app only utilizes two tables for audit trails. This has the advantage of super easy setup and a clean database, but has the disadvantage that all values in your models are converted to string before being saved.
 
+django-audit-trail should run on the latest Django stable. It is not released yet.
+
 Installation
 ------------
 
@@ -23,7 +25,9 @@ Usage
 
 Any audit logging is entirely automatic. However, if you are using models in a non-request context, or have not loaded the middleware, and do want to store the actor performing an action, you should inherit your models from ``audit.models.Model`` and replace all calls to ``save()`` with ``save(actor=user)``. Saving a form can be done by calling ``audit.save_form(form, actor=actor)``.
 
-Reading the audit log in your code can be done by searching for the correct LogItem (it uses a GenericForeignKey). Modifications can be found in the fieldchange_set.
+Reading the audit log in your code can be done by searching for the correct LogItem (it uses a GenericForeignKey). Modifications can be found in the fieldchange_set. Every modification contains an old_value and a new_value, both of which are always set if known.
+
+Be warned that the two tables can grow exponentially and you should use a proper DB setup that can handle this bulk of data. (Every value is stored multiple times: in the original table, in the new_value and after some time also in the old_value).
 
 Internals
 ---------
@@ -36,6 +40,7 @@ The middleware adds a ``_audit_actor`` attribute to every model created after th
 
 Future Work
 -----------
-* Tracking instance views
-* Tracking logins and logouts
-* Custom admin views
+* Tracking instance views by a user
+* Tracking logins and logouts as an additional option
+* Custom admin views (work has started, but does not what I want it to do yet)
+* Prevent duplicate data saving; we should only store old_value if this was not the previous new_value.
